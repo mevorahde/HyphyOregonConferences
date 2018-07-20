@@ -47,7 +47,7 @@ namespace HyphyOregonConferences
   
             }
 
-                Console.WriteLine("Press enter to close...");
+                Console.WriteLine("Press any key to close...");
                 Console.ReadLine();
         }
 
