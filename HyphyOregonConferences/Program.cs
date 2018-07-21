@@ -41,20 +41,23 @@ namespace HyphyOregonConferences
                     Conference = "West";
                 }
                 //Show the User the Owners Name with the results of their Conference.
-               Console.WriteLine(count + ". " + owner + "- " + Conference);
+                Console.WriteLine(count + ". " + owner + "- " + Conference);
                 count += 1;
 
-  
+
             }
 
-                Console.WriteLine("Press any key to close...");
-                Console.ReadLine();
+            //Exit the application
+            Console.WriteLine("Press any key to close...");
+            Console.ReadLine();
         }
 
         private static int GetUniqueRandomNumber(Random randomNumber, List<int> usedRandomNumbers)
         {
+            //Declare a variable for a unique random number
             int uniqueRandomNumber = 0;
 
+            //if no randon numbers have already been assigned, assign a random number between 1-10 to each owner names that was entered
             while (uniqueRandomNumber == 0)
             {
                 int currentRandomNumber = randomNumber.Next(1, 11);
@@ -74,19 +77,24 @@ namespace HyphyOregonConferences
         private static string[] GetOwnerNames()
         {
             //Special Character Check variable
-            Regex specialCharacters = new Regex(@"[~`!@#$%^&*()-+=|\{}':;.,<>/?]");
+            Regex specialCharacters = new Regex(@"[~`!@#$%^&*()+=|\{}':;.,<>/?]_");
+
+            //Duplicate Owner Name Check Variable
+            HashSet<string> duplicateValues = new HashSet<string>();
 
             //Array to read the loop of inputs the user enters
             string[] ownerNameInput = new string[10];
 
+
             for (int i = 0; i < 10; i++)
             {
+                //Read User input in the array
                 ownerNameInput[i] = Console.ReadLine();
 
                 if (int.TryParse(ownerNameInput[i], out int validationResult))
                 {
                     //Validation check for int characters
-                    Console.WriteLine("You entered a number. Please enter an owner's name in character values only.");
+                    Console.WriteLine("You entered a number. Please enter an owner's name in letter character values only.");
                     i--;
                 }
                 else if (ownerNameInput[i].Length == 0)
@@ -103,8 +111,20 @@ namespace HyphyOregonConferences
                 }
                 else if (specialCharacters.IsMatch(ownerNameInput[i]))
                 {
-                    //User input passed validation
+                    //Validation check for special characters validation
                     Console.WriteLine("You entered a special character. Please enter an owner's name in character values only.");
+                    i--;
+                }
+                else if (!duplicateValues.Add(ownerNameInput[i]))
+                {
+                    //Validation check for duplicate owner names
+                    Console.WriteLine("You entered a duplicate name. Please enter a different owner's name.");
+                    i--;
+                }
+                else if (ownerNameInput[i].Contains(" "))
+                {
+                    //Validation check for spaces in user input
+                    Console.WriteLine("You entered a space in the owner's name. Please only enter a owner's first name only.");
                     i--;
                 }
             }
