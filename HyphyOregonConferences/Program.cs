@@ -11,6 +11,8 @@ namespace HyphyOregonConferences
         {
             //Set Console Size
             Console.SetWindowSize(120, 30);
+            //Set App title
+            Console.Title = "Hyphy Oregon Conference Generator";
 
             //User is asked to input the first name of the owners of the Leauge.
             Console.WriteLine("Please, enter the first name of the 10 team owners of the Hyphy Oregon Fantasy Football League.");
