@@ -5,10 +5,13 @@ using System.Text.RegularExpressions;
 
 namespace HyphyOregonConferences
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
+            //Set Console Size
+            Console.SetWindowSize(120, 30);
+
             //User is asked to input the first name of the owners of the Leauge.
             Console.WriteLine("Please, enter the first name of the 10 team owners of the Hyphy Oregon Fantasy Football League.");
 
@@ -18,11 +21,10 @@ namespace HyphyOregonConferences
             Random randomNumber = new Random();
             string Conference;
 
-
             string[] ownerNameInput = GetOwnerNames();
             List<int> usedRandomNumbers = new List<int>();
 
-
+            Console.WriteLine(Environment.NewLine);
 
             foreach (string owner in ownerNameInput)
             {
@@ -43,13 +45,15 @@ namespace HyphyOregonConferences
                 //Show the User the Owners Name with the results of their Conference.
                 Console.WriteLine(count + ". " + owner + "- " + Conference);
                 count += 1;
-
-
             }
 
             //Exit the application
-            Console.WriteLine("Press any key to close...");
-            Console.ReadLine();
+            Console.WriteLine("\nPress ENTER to close...");
+            var line = Console.ReadLine();
+            if (string.IsNullOrEmpty(line))
+                Environment.Exit(0);
+            else
+                Console.WriteLine(line);
         }
 
         private static int GetUniqueRandomNumber(Random randomNumber, List<int> usedRandomNumbers)
@@ -85,43 +89,43 @@ namespace HyphyOregonConferences
             //Array to read the loop of inputs the user enters
             string[] ownerNameInput = new string[10];
 
-
             for (int i = 0; i < 10; i++)
             {
                 //Read User input in the array
                 ownerNameInput[i] = Console.ReadLine();
+                string converOwnerNumber = ownerNameInput[i].ToLower();
 
-                if (int.TryParse(ownerNameInput[i], out int validationResult))
+                if (int.TryParse(converOwnerNumber, out int validationResult))
                 {
                     //Validation check for int characters
                     Console.WriteLine("You entered a number. Please enter an owner's name in letter character values only.");
                     i--;
                 }
-                else if (ownerNameInput[i].Length == 0)
+                else if (converOwnerNumber.Length == 0)
                 {
                     //Validation check for no value entered
                     Console.WriteLine("You did not enter an owner's name. Please enter in an owner's name.");
                     i--;
                 }
-                else if (ownerNameInput[i].Length > 15)
+                else if (converOwnerNumber.Length > 15)
                 {
                     //Validation check for names greater than 15 characters
                     Console.WriteLine("You entered an owner's name that is over 15 characters. Please only enter in an owner's first name.");
                     i--;
                 }
-                else if (specialCharacters.IsMatch(ownerNameInput[i]))
+                else if (specialCharacters.IsMatch(converOwnerNumber))
                 {
                     //Validation check for special characters validation
                     Console.WriteLine("You entered a special character. Please enter an owner's name in character values only.");
                     i--;
                 }
-                else if (!duplicateValues.Add(ownerNameInput[i]))
+                else if (!duplicateValues.Add(converOwnerNumber))
                 {
                     //Validation check for duplicate owner names
                     Console.WriteLine("You entered a duplicate name. Please enter a different owner's name.");
                     i--;
                 }
-                else if (ownerNameInput[i].Contains(" "))
+                else if (converOwnerNumber.Contains(" "))
                 {
                     //Validation check for spaces in user input
                     Console.WriteLine("You entered a space in the owner's name. Please only enter a owner's first name only.");
@@ -132,10 +136,5 @@ namespace HyphyOregonConferences
             //User name passes validation
             return ownerNameInput;
         }
-
-
     }
-
 }
-
-
