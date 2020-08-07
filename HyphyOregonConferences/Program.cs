@@ -14,7 +14,7 @@ namespace HyphyOregonConferences
             //Set App title
             Console.Title = "Hyphy Oregon Conference Generator";
 
-            //User is asked to input the first name of the owners of the Leauge.
+            //User is asked to input the first name of the owners of the League.
             Console.WriteLine("Please, enter the first name of the 10 team owners of the Hyphy Oregon Fantasy Football League.");
 
             //count is used for read line purposes
@@ -63,7 +63,7 @@ namespace HyphyOregonConferences
             //Declare a variable for a unique random number
             int uniqueRandomNumber = 0;
 
-            //if no randon numbers have already been assigned, assign a random number between 1-10 to each owner names that was entered
+            //if no random numbers have already been assigned, assign a random number between 1-10 to each owner names that was entered
             while (uniqueRandomNumber == 0)
             {
                 int currentRandomNumber = randomNumber.Next(1, 11);
