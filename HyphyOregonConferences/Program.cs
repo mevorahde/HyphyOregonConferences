@@ -16,6 +16,7 @@ namespace HyphyOregonConferences
 
             //User is asked to input the first name of the owners of the League.
             Console.WriteLine("Please, enter the first name of the 10 team owners of the Hyphy Oregon Fantasy Football League.");
+            Console.WriteLine();
 
             //count is used for read line purposes
             int count = 1;
