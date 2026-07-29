@@ -257,7 +257,8 @@ public sealed class Stage4ReleasePolicyTests
     [TestMethod]
     public void ContinuousIntegrationPolicyIsLeastPrivilegeAndComplete()
     {
-        string workflow = File.ReadAllText(PathInRepository(".github/workflows/ci.yml"));
+        string workflow = TestText.ToLf(
+            File.ReadAllText(PathInRepository(".github/workflows/ci.yml")));
         StringAssert.Contains(workflow, "permissions:\n  contents: read");
         StringAssert.Contains(workflow, "cancel-in-progress: true");
         StringAssert.Contains(workflow, "os: [ubuntu-latest, windows-latest]");
@@ -274,7 +275,8 @@ public sealed class Stage4ReleasePolicyTests
     [TestMethod]
     public void PackagingWorkflowIsManualOnlyAndDoesNotPublishARelease()
     {
-        string workflow = File.ReadAllText(PathInRepository(".github/workflows/package.yml"));
+        string workflow = TestText.ToLf(
+            File.ReadAllText(PathInRepository(".github/workflows/package.yml")));
         StringAssert.Contains(workflow, "workflow_dispatch:");
         Assert.IsFalse(workflow.Contains("\n  push:", StringComparison.Ordinal));
         Assert.IsFalse(workflow.Contains("\n  pull_request:", StringComparison.Ordinal));
@@ -304,7 +306,8 @@ public sealed class Stage4ReleasePolicyTests
     [TestMethod]
     public void DocumentationCommandsAndGoldenVectorMatchBehavior()
     {
-        string readme = File.ReadAllText(PathInRepository("README.md"));
+        string readme = TestText.ToLf(
+            File.ReadAllText(PathInRepository("README.md")));
         StringAssert.Contains(
             readme,
             "dotnet restore HyphyOregon.ConferenceGenerator.slnx");
@@ -379,7 +382,8 @@ public sealed class Stage4ReleasePolicyTests
         StringAssert.Contains(provenance, "No words, lettering, team marks, league branding");
         StringAssert.Contains(provenance, "MIT License");
 
-        string migration = File.ReadAllText(PathInRepository("docs/migration-from-legacy.md"));
+        string migration = TestText.ToLf(
+            File.ReadAllText(PathInRepository("docs/migration-from-legacy.md")));
         StringAssert.Contains(migration, "legacy-dotnet-framework-4.5.2");
         StringAssert.Contains(migration, "remain recoverable from repository\nhistory");
 

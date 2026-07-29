@@ -73,7 +73,9 @@ public sealed class CliApplicationWorkflowTests
             Generator: SplitMix64-v1
 
             """;
-        Assert.AreEqual(expected, result.StandardOutput);
+        Assert.AreEqual(
+            TestText.ToLf(expected),
+            TestText.ToLf(result.StandardOutput));
         Assert.AreEqual(string.Empty, result.StandardError);
     }
 
