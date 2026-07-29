@@ -100,9 +100,17 @@ The manual packaging workflow produces two portable ZIP archives:
 
 - Framework-dependent, cross-platform: requires a compatible .NET 10 runtime
   and runs with
-  `dotnet HyphyOregon.ConferenceGenerator.Cli.dll`.
+  `dotnet "Hyphy Oregon Conference Generator.dll"`.
 - Self-contained Windows x64: includes the runtime and runs directly from its
   extracted folder without installation.
+
+PowerShell users can safely invoke the Windows executable through a quoted path
+variable:
+
+```powershell
+$exe = '.\Hyphy Oregon Conference Generator.exe'
+& $exe --help
+```
 
 Each archive has a separate SHA-256 checksum file. The Windows executable is
 unsigned, so Windows SmartScreen may warn. No release archive is published

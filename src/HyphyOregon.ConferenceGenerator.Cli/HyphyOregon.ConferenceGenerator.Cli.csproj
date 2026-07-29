@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <AssemblyName>HyphyOregon.ConferenceGenerator.Cli</AssemblyName>
+    <AssemblyName>Hyphy Oregon Conference Generator</AssemblyName>
     <RootNamespace>HyphyOregon.ConferenceGenerator.Cli</RootNamespace>
     <ApplicationIcon>Resources/hyphy-oregon-conference-generator.ico</ApplicationIcon>
     <IsPackable>false</IsPackable>

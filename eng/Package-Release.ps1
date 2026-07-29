@@ -32,10 +32,26 @@ if (Test-Path -LiteralPath $resolvedOutput) {
 
 $frameworkDirectory = Join-Path $resolvedOutput $manifest.frameworkDependent.rootDirectory
 $windowsDirectory = Join-Path $resolvedOutput $manifest.windowsX64.rootDirectory
+$releaseOutputName = [System.IO.Path]::GetFileNameWithoutExtension(
+    $manifest.frameworkDependent.entryPoint)
+$obsoleteOutputNames = @(
+    "HyphyOregon.ConferenceGenerator.Cli",
+    "HyphyOregonConferenceGenerator"
+)
 
 dotnet restore $project --runtime win-x64
 if ($LASTEXITCODE -ne 0) {
     throw "Runtime-specific restore failed."
+}
+
+dotnet clean $project --configuration Release
+if ($LASTEXITCODE -ne 0) {
+    throw "Framework-dependent clean failed."
+}
+
+dotnet clean $project --configuration Release --runtime win-x64
+if ($LASTEXITCODE -ne 0) {
+    throw "Windows x64 clean failed."
 }
 
 dotnet publish $project `
@@ -62,6 +78,22 @@ if ($LASTEXITCODE -ne 0) {
     throw "Windows x64 publish failed."
 }
 
+$frameworkRequiredFiles = @(
+    $manifest.frameworkDependent.entryPoint,
+    "$releaseOutputName.deps.json",
+    "$releaseOutputName.runtimeconfig.json"
+)
+foreach ($requiredFile in $frameworkRequiredFiles) {
+    if (-not (Test-Path -LiteralPath (Join-Path $frameworkDirectory $requiredFile))) {
+        throw "A required framework-dependent output file is missing: $requiredFile"
+    }
+}
+
+if (-not (Test-Path -LiteralPath (
+    Join-Path $windowsDirectory $manifest.windowsX64.entryPoint))) {
+    throw "The required Windows output file is missing: $($manifest.windowsX64.entryPoint)"
+}
+
 foreach ($directory in @($frameworkDirectory, $windowsDirectory)) {
     Copy-Item -LiteralPath (Join-Path $repositoryRoot "LICENSE") -Destination $directory
     Copy-Item -LiteralPath (Join-Path $repositoryRoot "README.md") -Destination $directory
@@ -73,6 +105,17 @@ foreach ($directory in @($frameworkDirectory, $windowsDirectory)) {
     })
     if ($forbidden.Count -ne 0) {
         throw "A forbidden file was found in a publish directory."
+    }
+
+    $obsolete = @(Get-ChildItem -LiteralPath $directory -Recurse -File | Where-Object {
+        $fileName = $_.Name
+        $obsoleteOutputNames | Where-Object {
+            $fileName -eq $_ -or
+            $fileName.StartsWith("$_.", [System.StringComparison]::OrdinalIgnoreCase)
+        }
+    })
+    if ($obsolete.Count -ne 0) {
+        throw "An obsolete output name was found in a publish directory."
     }
 }
 

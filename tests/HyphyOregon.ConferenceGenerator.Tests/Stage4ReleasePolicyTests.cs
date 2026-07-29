@@ -12,6 +12,7 @@ namespace HyphyOregon.ConferenceGenerator.Tests;
 public sealed class Stage4ReleasePolicyTests
 {
     private const string ReleaseVersion = "1.0.0-rc.1";
+    private const string ReleaseOutputName = "Hyphy Oregon Conference Generator";
     private const string PngHash =
         "E15F2EB4D5BEE13F25ECFD61B6D7249F388F84ECB0224CD8A747E82971B73207";
     private static readonly int[] IconSizes = [16, 24, 32, 48, 64, 128, 256];
@@ -20,6 +21,7 @@ public sealed class Stage4ReleasePolicyTests
     public void VersionMetadataIsConsistent()
     {
         Assembly assembly = typeof(CliMetadata).Assembly;
+        Assert.AreEqual(ReleaseOutputName, assembly.GetName().Name);
         Assert.AreEqual(new Version(1, 0, 0, 0), assembly.GetName().Version);
         Assert.AreEqual(
             "1.0.0.0",
@@ -127,6 +129,10 @@ public sealed class Stage4ReleasePolicyTests
             "src/HyphyOregon.ConferenceGenerator.Cli/"
             + "HyphyOregon.ConferenceGenerator.Cli.csproj"));
         string expectedIcon = "Resources/hyphy-oregon-conference-generator.ico";
+        Assert.AreEqual(ReleaseOutputName, PropertyValue(project, "AssemblyName"));
+        Assert.AreEqual(
+            "HyphyOregon.ConferenceGenerator.Cli",
+            PropertyValue(project, "RootNamespace"));
         Assert.AreEqual(expectedIcon, PropertyValue(project, "ApplicationIcon"));
 
         XElement[] resources = project.Descendants("None")
@@ -165,11 +171,18 @@ public sealed class Stage4ReleasePolicyTests
                 "^hyphy-oregon-conference-generator-1\\.0\\.0-rc\\.1-"
                 + "win-x64-self-contained\\.zip$"));
         Assert.AreEqual(
-            "HyphyOregon.ConferenceGenerator.Cli.dll",
+            $"{ReleaseOutputName}.dll",
             root.GetProperty("frameworkDependent").GetProperty("entryPoint").GetString());
         Assert.AreEqual(
-            "HyphyOregon.ConferenceGenerator.Cli.exe",
+            $"{ReleaseOutputName}.exe",
             root.GetProperty("windowsX64").GetProperty("entryPoint").GetString());
+        string manifest = File.ReadAllText(PathInRepository("eng/release-manifest.json"));
+        Assert.IsFalse(
+            manifest.Contains(
+                "HyphyOregon.ConferenceGenerator.Cli",
+                StringComparison.Ordinal));
+        Assert.IsFalse(
+            manifest.Contains("HyphyOregonConferenceGenerator", StringComparison.Ordinal));
 
         string[] shared = root.GetProperty("requiredSharedFiles")
             .EnumerateArray()
@@ -189,11 +202,16 @@ public sealed class Stage4ReleasePolicyTests
         StringAssert.Contains(script, "--self-contained false");
         StringAssert.Contains(script, "--self-contained true");
         StringAssert.Contains(script, "--runtime win-x64");
+        Assert.AreEqual(2, Count(script, "dotnet clean $project"));
         StringAssert.Contains(script, "-p:UseAppHost=false");
         StringAssert.Contains(script, "Compress-Archive");
         StringAssert.Contains(script, "Get-FileHash");
         StringAssert.Contains(script, "LICENSE");
         StringAssert.Contains(script, "README.md");
+        StringAssert.Contains(script, "$releaseOutputName.deps.json");
+        StringAssert.Contains(script, "$releaseOutputName.runtimeconfig.json");
+        StringAssert.Contains(script, "HyphyOregon.ConferenceGenerator.Cli");
+        StringAssert.Contains(script, "HyphyOregonConferenceGenerator");
         Assert.IsFalse(script.Contains("PublishSingleFile", StringComparison.OrdinalIgnoreCase));
         Assert.IsFalse(script.Contains("dotnet pack", StringComparison.OrdinalIgnoreCase));
         Assert.IsFalse(script.Contains("gh release", StringComparison.OrdinalIgnoreCase));
@@ -270,7 +288,17 @@ public sealed class Stage4ReleasePolicyTests
         StringAssert.Contains(readme, "| 70 | Unexpected internal failure |");
         StringAssert.Contains(
             readme,
-            "dotnet HyphyOregon.ConferenceGenerator.Cli.dll");
+            "dotnet \"Hyphy Oregon Conference Generator.dll\"");
+        StringAssert.Contains(
+            readme,
+            "$exe = '.\\Hyphy Oregon Conference Generator.exe'");
+        StringAssert.Contains(readme, "& $exe --help");
+        Assert.IsFalse(
+            readme.Contains(
+                "dotnet HyphyOregon.ConferenceGenerator.Cli.dll",
+                StringComparison.Ordinal));
+        Assert.IsFalse(
+            readme.Contains("HyphyOregonConferenceGenerator", StringComparison.Ordinal));
         StringAssert.Contains(readme, "Windows executable is\nunsigned");
     }
 
