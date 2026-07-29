@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/HyphyOregon.ConferenceGenerator.Core/HyphyOregon.ConferenceGenerator.Core.csproj" />
+    <Project Path="src/HyphyOregon.ConferenceGenerator.Cli/HyphyOregon.ConferenceGenerator.Cli.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/HyphyOregon.ConferenceGenerator.Tests/HyphyOregon.ConferenceGenerator.Tests.csproj" />
+  </Folder>
+</Solution>

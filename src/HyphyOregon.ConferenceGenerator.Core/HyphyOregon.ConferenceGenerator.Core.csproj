@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>HyphyOregon.ConferenceGenerator.Core</AssemblyName>
+    <RootNamespace>HyphyOregon.ConferenceGenerator.Core</RootNamespace>
+  </PropertyGroup>
+</Project>
