@@ -1,13 +1,13 @@
 {
-  "version": "1.0.0-rc.1",
+  "version": "1.0.0",
   "frameworkDependent": {
-    "archive": "hyphy-oregon-conference-generator-1.0.0-rc.1-framework-dependent-any.zip",
-    "rootDirectory": "hyphy-oregon-conference-generator-1.0.0-rc.1-framework-dependent-any",
+    "archive": "hyphy-oregon-conference-generator-1.0.0-framework-dependent-any.zip",
+    "rootDirectory": "hyphy-oregon-conference-generator-1.0.0-framework-dependent-any",
     "entryPoint": "Hyphy Oregon Conference Generator.dll"
   },
   "windowsX64": {
-    "archive": "hyphy-oregon-conference-generator-1.0.0-rc.1-win-x64-self-contained.zip",
-    "rootDirectory": "hyphy-oregon-conference-generator-1.0.0-rc.1-win-x64-self-contained",
+    "archive": "hyphy-oregon-conference-generator-1.0.0-win-x64-self-contained.zip",
+    "rootDirectory": "hyphy-oregon-conference-generator-1.0.0-win-x64-self-contained",
     "entryPoint": "Hyphy Oregon Conference Generator.exe"
   },
   "requiredSharedFiles": [

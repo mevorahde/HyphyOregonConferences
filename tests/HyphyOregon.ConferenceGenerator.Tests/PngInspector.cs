@@ -7,11 +7,17 @@ internal sealed class PngInspector
 {
     private static readonly byte[] Signature = [137, 80, 78, 71, 13, 10, 26, 10];
 
-    private PngInspector(int width, int height, byte colorType, byte[] pixels)
+    private PngInspector(
+        int width,
+        int height,
+        byte colorType,
+        int bytesPerPixel,
+        byte[] pixels)
     {
         Width = width;
         Height = height;
         ColorType = colorType;
+        BytesPerPixel = bytesPerPixel;
         Pixels = pixels;
     }
 
@@ -20,6 +26,8 @@ internal sealed class PngInspector
     public int Height { get; }
 
     public byte ColorType { get; }
+
+    public int BytesPerPixel { get; }
 
     public byte[] Pixels { get; }
 
@@ -56,9 +64,9 @@ internal sealed class PngInspector
                 }
 
                 colorType = content[9];
-                if (colorType != 6)
+                if (colorType is not (2 or 6))
                 {
-                    throw new InvalidDataException("The PNG is not RGBA.");
+                    throw new InvalidDataException("The PNG is not RGB or RGBA.");
                 }
             }
             else if (type.SequenceEqual("IDAT"u8))
@@ -84,7 +92,7 @@ internal sealed class PngInspector
         }
 
         byte[] scanlines = decompressed.ToArray();
-        const int bytesPerPixel = 4;
+        int bytesPerPixel = colorType == 6 ? 4 : 3;
         int stride = checked(width * bytesPerPixel);
         if (scanlines.Length != checked((stride + 1) * height))
         {
@@ -123,13 +131,13 @@ internal sealed class PngInspector
             }
         }
 
-        return new PngInspector(width, height, colorType, pixels);
+        return new PngInspector(width, height, colorType, bytesPerPixel, pixels);
     }
 
     public ReadOnlySpan<byte> PixelAt(int x, int y)
     {
-        int offset = checked(((y * Width) + x) * 4);
-        return Pixels.AsSpan(offset, 4);
+        int offset = checked(((y * Width) + x) * BytesPerPixel);
+        return Pixels.AsSpan(offset, BytesPerPixel);
     }
 
     private static byte Paeth(byte left, byte above, byte upperLeft)

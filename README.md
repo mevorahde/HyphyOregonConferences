@@ -74,6 +74,12 @@ Seed: 20200830
 Generator: SplitMix64-v1
 ```
 
+The portfolio capture below shows the deterministic seed `20200830` smoke-test
+output from the functionally identical `1.0.0-rc.1` package. It does not
+represent a separate test of the final stable version.
+
+![Hyphy Oregon Conference Generator CLI deterministic draw](docs/images/hyphy-oregon-conference-generator-cli.png)
+
 Seeded draws use the project-defined, versioned SplitMix64-v1 generator and
 repeat for the same input and seed across supported runtimes. Unseeded draws
 use the system-backed random source and are not intended to repeat. Neither
@@ -96,7 +102,8 @@ exactly once and gives every conference the same number of owners.
 
 ## Release archives
 
-The manual packaging workflow produces two portable ZIP archives:
+Version `1.0.0` is the first stable modern release. The manual packaging
+workflow produces two portable ZIP archives:
 
 - Framework-dependent, cross-platform: requires a compatible .NET 10 runtime
   and runs with
@@ -113,8 +120,12 @@ $exe = '.\Hyphy Oregon Conference Generator.exe'
 ```
 
 Each archive has a separate SHA-256 checksum file. The Windows executable is
-unsigned, so Windows SmartScreen may warn. No release archive is published
-automatically and the workflows do not create a GitHub Release.
+unsigned, so Windows SmartScreen may warn. The Windows x64 self-contained
+package was manually smoke-tested as `1.0.0-rc.1` before promotion. The final
+stable promotion changes release metadata, documentation, the portfolio
+screenshot, and regression expectations without changing application
+behavior. No bit-for-bit reproducible-build claim is made. No release archive
+is published automatically and the workflows do not create a GitHub Release.
 
 ## License and history
 

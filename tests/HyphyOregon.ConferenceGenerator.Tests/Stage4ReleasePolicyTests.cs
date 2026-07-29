@@ -1,6 +1,7 @@
 using System.Buffers.Binary;
 using System.Reflection;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Xml.Linq;
 using HyphyOregon.ConferenceGenerator.Cli;
@@ -11,10 +12,14 @@ namespace HyphyOregon.ConferenceGenerator.Tests;
 [TestCategory("Stage4")]
 public sealed class Stage4ReleasePolicyTests
 {
-    private const string ReleaseVersion = "1.0.0-rc.1";
+    private const string ReleaseVersion = "1.0.0";
     private const string ReleaseOutputName = "Hyphy Oregon Conference Generator";
     private const string PngHash =
         "E15F2EB4D5BEE13F25ECFD61B6D7249F388F84ECB0224CD8A747E82971B73207";
+    private const string ScreenshotHash =
+        "4A9E4BD9A99D367726B44A986E1ABD13E9F6331E1ADCD3FB31EB16E32A128E9B";
+    private const string ScreenshotPixelHash =
+        "51E1214A3481533F9646E431A80BFBA1C66E86469A31B69EC85EB387FDBFE5CB";
     private static readonly int[] IconSizes = [16, 24, 32, 48, 64, 128, 256];
 
     [TestMethod]
@@ -38,6 +43,7 @@ public sealed class Stage4ReleasePolicyTests
         Assert.AreEqual("1.0.0.0", PropertyValue(props, "AssemblyVersion"));
         Assert.AreEqual("1.0.0.0", PropertyValue(props, "FileVersion"));
         Assert.AreEqual(ReleaseVersion, PropertyValue(props, "InformationalVersion"));
+        Assert.AreEqual(0, props.Descendants("VersionSuffix").Count());
         Assert.AreEqual("true", PropertyValue(props, "TreatWarningsAsErrors"));
     }
 
@@ -123,6 +129,36 @@ public sealed class Stage4ReleasePolicyTests
     }
 
     [TestMethod]
+    public void PortfolioScreenshotIsApprovedSanitizedCapture()
+    {
+        string path = PathInRepository(
+            "docs/images/hyphy-oregon-conference-generator-cli.png");
+        byte[] data = File.ReadAllBytes(path);
+        Assert.AreEqual(57568, data.Length);
+        Assert.AreEqual(ScreenshotHash, Convert.ToHexString(SHA256.HashData(data)));
+
+        PngInspector image = PngInspector.Read(data);
+        Assert.AreEqual(582, image.Width);
+        Assert.AreEqual(608, image.Height);
+        Assert.AreEqual((byte)2, image.ColorType, "PNG color type 2 is RGB.");
+        Assert.AreEqual(3, image.BytesPerPixel);
+        Assert.AreEqual(
+            ScreenshotPixelHash,
+            Convert.ToHexString(SHA256.HashData(image.Pixels)));
+
+        string[] chunkTypes = PngChunkTypes(data);
+        Assert.AreEqual("IHDR", chunkTypes[0]);
+        Assert.AreEqual("IEND", chunkTypes[^1]);
+        Assert.IsTrue(chunkTypes[1..^1].All(type => type == "IDAT"));
+
+        string readme = File.ReadAllText(PathInRepository("README.md"));
+        StringAssert.Contains(
+            readme,
+            "![Hyphy Oregon Conference Generator CLI deterministic draw]"
+            + "(docs/images/hyphy-oregon-conference-generator-cli.png)");
+    }
+
+    [TestMethod]
     public void CliProjectConfiguresAndPublishesBothModernAssets()
     {
         XDocument project = XDocument.Load(PathInRepository(
@@ -163,12 +199,12 @@ public sealed class Stage4ReleasePolicyTests
         StringAssert.Matches(
             frameworkArchive,
             new System.Text.RegularExpressions.Regex(
-                "^hyphy-oregon-conference-generator-1\\.0\\.0-rc\\.1-"
+                "^hyphy-oregon-conference-generator-1\\.0\\.0-"
                 + "framework-dependent-any\\.zip$"));
         StringAssert.Matches(
             windowsArchive,
             new System.Text.RegularExpressions.Regex(
-                "^hyphy-oregon-conference-generator-1\\.0\\.0-rc\\.1-"
+                "^hyphy-oregon-conference-generator-1\\.0\\.0-"
                 + "win-x64-self-contained\\.zip$"));
         Assert.AreEqual(
             $"{ReleaseOutputName}.dll",
@@ -183,6 +219,7 @@ public sealed class Stage4ReleasePolicyTests
                 StringComparison.Ordinal));
         Assert.IsFalse(
             manifest.Contains("HyphyOregonConferenceGenerator", StringComparison.Ordinal));
+        Assert.IsFalse(manifest.Contains("rc.1", StringComparison.Ordinal));
 
         string[] shared = root.GetProperty("requiredSharedFiles")
             .EnumerateArray()
@@ -243,11 +280,15 @@ public sealed class Stage4ReleasePolicyTests
         Assert.IsFalse(workflow.Contains("\n  pull_request:", StringComparison.Ordinal));
         StringAssert.Contains(workflow, "permissions:\n  contents: read");
         StringAssert.Contains(workflow, "uses: actions/upload-artifact@v7");
+        StringAssert.Contains(
+            workflow,
+            "name: hyphy-oregon-conference-generator-1.0.0");
         StringAssert.Contains(workflow, "artifacts/release/*.zip");
         StringAssert.Contains(workflow, "artifacts/release/*.zip.sha256");
         Assert.IsFalse(workflow.Contains("releases: write", StringComparison.OrdinalIgnoreCase));
         Assert.IsFalse(workflow.Contains("gh release", StringComparison.OrdinalIgnoreCase));
         Assert.IsFalse(workflow.Contains("create-release", StringComparison.OrdinalIgnoreCase));
+        Assert.IsFalse(workflow.Contains("rc.1", StringComparison.Ordinal));
     }
 
     [TestMethod]
@@ -299,7 +340,34 @@ public sealed class Stage4ReleasePolicyTests
                 StringComparison.Ordinal));
         Assert.IsFalse(
             readme.Contains("HyphyOregonConferenceGenerator", StringComparison.Ordinal));
+        StringAssert.Contains(readme, "Version `1.0.0` is the first stable modern release.");
+        StringAssert.Contains(readme, "manually smoke-tested as `1.0.0-rc.1`");
+        StringAssert.Contains(readme, "No bit-for-bit reproducible-build claim is made.");
+        StringAssert.Contains(
+            readme,
+            "deterministic seed `20200830` smoke-test\noutput from the functionally identical"
+            + " `1.0.0-rc.1` package");
         StringAssert.Contains(readme, "Windows executable is\nunsigned");
+
+        string changelog = File.ReadAllText(PathInRepository("CHANGELOG.md"));
+        StringAssert.Contains(changelog, "## [1.0.0] - 2026-07-29");
+        StringAssert.Contains(changelog, "## [1.0.0-rc.1] - 2026-07-28");
+        StringAssert.Contains(changelog, "first stable modern release metadata");
+
+        foreach (string currentVersionFile in
+                 new[]
+                 {
+                     "Directory.Build.props",
+                     "eng/release-manifest.json",
+                     ".github/workflows/package.yml",
+                     "SECURITY.md"
+                 })
+        {
+            Assert.IsFalse(
+                File.ReadAllText(PathInRepository(currentVersionFile))
+                    .Contains("rc.1", StringComparison.Ordinal),
+                currentVersionFile);
+        }
     }
 
     [TestMethod]
@@ -333,6 +401,22 @@ public sealed class Stage4ReleasePolicyTests
         }
 
         return count;
+    }
+
+    private static string[] PngChunkTypes(byte[] data)
+    {
+        var types = new List<string>();
+        int offset = 8;
+        while (offset < data.Length)
+        {
+            int length = checked(
+                (int)BinaryPrimitives.ReadUInt32BigEndian(data.AsSpan(offset, 4)));
+            types.Add(Encoding.ASCII.GetString(data, offset + 4, 4));
+            offset = checked(offset + 12 + length);
+        }
+
+        Assert.AreEqual(data.Length, offset);
+        return types.ToArray();
     }
 
     private static string PathInRepository(string relativePath) =>

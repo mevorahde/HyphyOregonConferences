@@ -2,7 +2,7 @@
 
 ## Supported version
 
-Security fixes are currently considered for the `1.0.0-rc.1` release candidate.
+Security fixes are currently considered for the stable `1.0.0` release.
 
 ## Reporting a vulnerability
 
