@@ -257,6 +257,12 @@ public sealed class Stage4ReleasePolicyTests
     [TestMethod]
     public void ContinuousIntegrationPolicyIsLeastPrivilegeAndComplete()
     {
+        string attributes = TestText.ToLf(
+            File.ReadAllText(PathInRepository(".gitattributes")));
+        StringAssert.Contains(attributes, "* text=auto eol=lf");
+        StringAssert.Contains(attributes, "*.png binary");
+        StringAssert.Contains(attributes, "*.ico binary");
+
         string workflow = TestText.ToLf(
             File.ReadAllText(PathInRepository(".github/workflows/ci.yml")));
         StringAssert.Contains(workflow, "permissions:\n  contents: read");
