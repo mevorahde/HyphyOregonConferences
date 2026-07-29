@@ -1,4 +1,5 @@
 using System.Buffers.Binary;
+using System.Diagnostics;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -14,6 +15,14 @@ public sealed class Stage4ReleasePolicyTests
 {
     private const string ReleaseVersion = "1.0.0";
     private const string ReleaseOutputName = "Hyphy Oregon Conference Generator";
+    private const string CanonicalRepositoryUrl =
+        "https://github.com/mevorahde/hyphy-oregon-conference-generator";
+    private const string ObsoleteRepositoryFoundMessage =
+        "Obsolete repository identifier found in tracked text.";
+    private const string RepositoryScanFailedMessage =
+        "Tracked-text repository policy scan could not be completed.";
+    private const int RepositoryScanTimeoutMilliseconds = 10_000;
+    private const int RepositoryScanCleanupTimeoutMilliseconds = 5_000;
     private const string PngHash =
         "E15F2EB4D5BEE13F25ECFD61B6D7249F388F84ECB0224CD8A747E82971B73207";
     private const string ScreenshotHash =
@@ -63,6 +72,9 @@ public sealed class Stage4ReleasePolicyTests
         Assert.AreEqual(
             "Copyright (c) 2026 David Mevorah",
             PropertyValue(props, "Copyright"));
+        Assert.AreEqual(CanonicalRepositoryUrl, PropertyValue(props, "RepositoryUrl"));
+        AssertObsoleteRepositoryUrlIsAbsent();
+        AssertRepositoryScanFailureOutputIsSafe();
     }
 
     [TestMethod]
@@ -399,6 +411,140 @@ public sealed class Stage4ReleasePolicyTests
 
     private static string PropertyValue(XDocument document, string name) =>
         document.Descendants(name).Single().Value;
+
+    private static void AssertObsoleteRepositoryUrlIsAbsent()
+    {
+        string obsoleteRepository = "mevorahde/" + "HyphyOregonConferences";
+        var startInfo = new ProcessStartInfo("git")
+        {
+            WorkingDirectory = FindRepositoryRoot(),
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false
+        };
+        startInfo.ArgumentList.Add("grep");
+        startInfo.ArgumentList.Add("--quiet");
+        startInfo.ArgumentList.Add("--fixed-strings");
+        startInfo.ArgumentList.Add("--");
+        startInfo.ArgumentList.Add(obsoleteRepository);
+
+        AssertTrackedTextScan(() => RunTrackedTextScan(startInfo));
+    }
+
+    private static TrackedTextScanResult RunTrackedTextScan(ProcessStartInfo startInfo)
+    {
+        using var process = new Process { StartInfo = startInfo };
+        try
+        {
+            if (!process.Start())
+            {
+                throw new InvalidOperationException();
+            }
+
+            Task<string> standardOutput = process.StandardOutput.ReadToEndAsync();
+            Task<string> standardError = process.StandardError.ReadToEndAsync();
+            if (!process.WaitForExit(RepositoryScanTimeoutMilliseconds)
+                || !Task.WaitAll(
+                    [standardOutput, standardError],
+                    RepositoryScanCleanupTimeoutMilliseconds))
+            {
+                throw new TimeoutException();
+            }
+
+            return new TrackedTextScanResult(
+                process.ExitCode,
+                standardOutput.Result,
+                standardError.Result);
+        }
+        finally
+        {
+            EnsureProcessExited(process);
+        }
+    }
+
+    private static void EnsureProcessExited(Process process)
+    {
+        try
+        {
+            if (process.HasExited)
+            {
+                return;
+            }
+
+            process.Kill(entireProcessTree: true);
+            process.WaitForExit(RepositoryScanCleanupTimeoutMilliseconds);
+        }
+        catch
+        {
+            // Failure details must not enter test output.
+        }
+    }
+
+    private static void AssertTrackedTextScan(Func<TrackedTextScanResult> scan)
+    {
+        TrackedTextScanResult result;
+        try
+        {
+            result = scan();
+        }
+        catch
+        {
+            Assert.Fail(RepositoryScanFailedMessage);
+            return;
+        }
+
+        if (result.ExitCode == 1)
+        {
+            return;
+        }
+
+        Assert.Fail(
+            result.ExitCode == 0
+                ? ObsoleteRepositoryFoundMessage
+                : RepositoryScanFailedMessage);
+    }
+
+    private static void AssertRepositoryScanFailureOutputIsSafe()
+    {
+        const string sensitiveOutput =
+            "matched-content repository/path C:\\machine\\path git.exe stderr";
+        AssertScanFailureMessage(
+            () => new TrackedTextScanResult(0, sensitiveOutput, sensitiveOutput),
+            ObsoleteRepositoryFoundMessage);
+        AssertScanFailureMessage(
+            () => new TrackedTextScanResult(2, sensitiveOutput, sensitiveOutput),
+            RepositoryScanFailedMessage);
+        AssertScanFailureMessage(
+            () => throw new InvalidOperationException(sensitiveOutput),
+            RepositoryScanFailedMessage);
+    }
+
+    private static void AssertScanFailureMessage(
+        Func<TrackedTextScanResult> scan,
+        string expectedMessage)
+    {
+        try
+        {
+            AssertTrackedTextScan(scan);
+        }
+        catch (AssertFailedException exception)
+        {
+            if (exception.Message.EndsWith(expectedMessage, StringComparison.Ordinal)
+                && !exception.Message.Contains("matched-content", StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            Assert.Fail("Repository policy failure output was not safely bounded.");
+        }
+
+        Assert.Fail("Repository policy failure behavior was not observed.");
+    }
+
+    private readonly record struct TrackedTextScanResult(
+        int ExitCode,
+        string StandardOutput,
+        string StandardError);
 
     private static int Count(string value, string fragment)
     {
