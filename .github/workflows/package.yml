@@ -1,0 +1,42 @@
+name: Package stable release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: package-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  package:
+    runs-on: windows-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+      - name: Install pinned .NET SDK
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - name: Restore modern solution
+        run: dotnet restore HyphyOregon.ConferenceGenerator.slnx
+      - name: Build Release
+        run: dotnet build HyphyOregon.ConferenceGenerator.slnx --configuration Release --no-restore
+      - name: Run complete test suite
+        run: dotnet test HyphyOregon.ConferenceGenerator.slnx --configuration Release --no-build
+      - name: Verify formatting
+        run: dotnet format HyphyOregon.ConferenceGenerator.slnx --verify-no-changes --no-restore
+      - name: Build reviewed archives and checksums
+        shell: pwsh
+        run: ./eng/Package-Release.ps1 -OutputDirectory artifacts/release
+      - name: Upload reviewed archives and checksums
+        uses: actions/upload-artifact@v7
+        with:
+          name: hyphy-oregon-conference-generator-1.0.0
+          path: |
+            artifacts/release/*.zip
+            artifacts/release/*.zip.sha256
+          if-no-files-found: error
+          retention-days: 14

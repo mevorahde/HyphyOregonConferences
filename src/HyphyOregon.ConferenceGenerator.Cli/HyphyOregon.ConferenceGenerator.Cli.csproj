@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>Hyphy Oregon Conference Generator</AssemblyName>
+    <RootNamespace>HyphyOregon.ConferenceGenerator.Cli</RootNamespace>
+    <ApplicationIcon>Resources/hyphy-oregon-conference-generator.ico</ApplicationIcon>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../HyphyOregon.ConferenceGenerator.Core/HyphyOregon.ConferenceGenerator.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Resources/hyphy-oregon-conference-generator.ico"
+          CopyToOutputDirectory="PreserveNewest"
+          CopyToPublishDirectory="PreserveNewest" />
+    <None Update="Resources/hyphy-oregon-conference-generator.png"
+          CopyToOutputDirectory="PreserveNewest"
+          CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>
