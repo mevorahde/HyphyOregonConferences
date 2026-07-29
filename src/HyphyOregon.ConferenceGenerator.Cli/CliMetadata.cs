@@ -10,5 +10,23 @@ public static class CliMetadata
         "Creates fair, reproducible fantasy-football conference assignments.";
 
     public static string HelpText { get; } =
-        "The interactive console workflow will be implemented in Stage 3.";
+        """
+        Hyphy Oregon Conference Generator
+
+        Usage:
+          hyphy-conferences
+          hyphy-conferences --help
+          hyphy-conferences --version
+          hyphy-conferences --owner <name> [--owner <name> ...]
+                            [--conference <name> --conference <name> ...]
+                            [--seed <unsigned-integer>]
+
+        Options:
+          --owner <name>       Add an owner. Repeat for every owner.
+          --conference <name>  Add a conference. Repeat as needed.
+                               East and West are used when omitted.
+          --seed <value>       Use the stable SplitMix64-v1 generator.
+          --help               Show this help.
+          --version            Show version information.
+        """;
 }

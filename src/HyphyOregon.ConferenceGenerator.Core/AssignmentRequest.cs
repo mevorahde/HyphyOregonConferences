@@ -114,35 +114,7 @@ public sealed record AssignmentRequest
                 "Owner count must be exactly divisible by conference count.");
         }
 
-        EnsureUniqueOwners(owners);
-        EnsureUniqueConferences(conferences);
-    }
-
-    private static void EnsureUniqueOwners(IEnumerable<Owner> owners)
-    {
-        var uniqueNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach (Owner owner in owners)
-        {
-            if (!uniqueNames.Add(owner.Name))
-            {
-                throw new DomainValidationException(
-                    DomainValidationError.DuplicateOwner,
-                    $"Owner names must be unique; '{owner.Name}' appears more than once.");
-            }
-        }
-    }
-
-    private static void EnsureUniqueConferences(IEnumerable<Conference> conferences)
-    {
-        var uniqueNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach (Conference conference in conferences)
-        {
-            if (!uniqueNames.Add(conference.Name))
-            {
-                throw new DomainValidationException(
-                    DomainValidationError.DuplicateConference,
-                    $"Conference names must be unique; '{conference.Name}' appears more than once.");
-            }
-        }
+        AssignmentValidation.EnsureUniqueOwners(owners);
+        AssignmentValidation.EnsureUniqueConferences(conferences);
     }
 }

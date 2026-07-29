@@ -14,7 +14,8 @@ public sealed class CliCompositionTests
         Assert.AreEqual(
             "Creates fair, reproducible fantasy-football conference assignments.",
             CliMetadata.Description);
-        StringAssert.Contains(CliMetadata.HelpText, "Stage 3", StringComparison.Ordinal);
+        StringAssert.Contains(CliMetadata.HelpText, "Usage:", StringComparison.Ordinal);
+        StringAssert.Contains(CliMetadata.HelpText, "--owner", StringComparison.Ordinal);
     }
 
     [TestMethod]
